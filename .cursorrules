@@ -1,0 +1,42 @@
+# TypeScript & React Best Practices
+
+## TypeScript Rules
+- Use explicit typing for all function parameters and return types
+- Avoid using `any` type - use `unknown` when type is truly unknown
+- Use type inference for variables when the type is obvious
+- Prefer interfaces over type aliases for object shapes
+- Use const assertions for literal types
+- Enable strict mode in tsconfig.json
+
+## React Guidelines
+- Use functional components with TypeScript
+- Properly type component props with interfaces
+- Use React.FC sparingly - prefer explicit return type
+- Handle all possible states (loading, error, success)
+- Use custom hooks for reusable logic
+- Implement proper error boundaries
+
+## Code Quality
+- Keep components small and focused
+- Extract complex logic into custom hooks or utilities
+- Use descriptive variable and function names
+- Add JSDoc comments for complex functions
+- Implement comprehensive error handling
+- Write tests for critical functionality
+
+## State Management
+- Use React's built-in state management when possible
+- Consider Context API for cross-component state
+- Implement proper TypeScript types for all state
+
+## Performance
+- Use React.memo for expensive components
+- Implement proper key props in lists
+- Lazy load components when appropriate
+- Optimize re-renders with useMemo and useCallback
+
+## Testing
+- Write unit tests for utilities and hooks
+- Test component behavior, not implementation
+- Use React Testing Library best practices
+- Maintain good test coverage for critical paths
