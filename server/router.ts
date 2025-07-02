@@ -26,14 +26,45 @@ const AdjustStockInputSchema = z.object({
   notes: z.string().optional(),
 });
 
+const ItemsFilterSchema = z.object({
+  search: z.string().optional(),
+  categoryId: z.number().optional(),
+  lowStockOnly: z.boolean().optional(),
+});
+
 const itemsRouter = router({
   list: protectedProcedure
+    .input(ItemsFilterSchema.optional())
     .output(z.array(ItemSchema))
-    .query(async ({ ctx }) => {
-      const { data, error } = await ctx.supabase
-        .from('items')
-        .select('*')
-        .order('name', { ascending: true });
+    .query(async ({ input, ctx }) => {
+      let query = ctx.supabase.from('items').select('*');
+
+      // Apply filters if provided
+      if (input) {
+        const { search, categoryId, lowStockOnly } = input;
+
+        // Search filter - search in name and sku using ILIKE
+        if (search) {
+          query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+        }
+
+        // Category filter
+        if (categoryId !== undefined) {
+          query = query.eq('category_id', categoryId);
+        }
+
+        // Low stock filter - current_stock <= min_stock
+        if (lowStockOnly) {
+          // For now, fetch all and filter in memory (can be optimized with a database view)
+          // In production, consider creating a computed column or view for this
+          query = query.gte('min_stock', 0); // This will be post-filtered
+        }
+      }
+
+      // Always order by name
+      query = query.order('name', { ascending: true });
+
+      const { data, error } = await query;
 
       if (error) {
         throw new TRPCError({
@@ -43,7 +74,15 @@ const itemsRouter = router({
         });
       }
 
-      return data;
+      // Post-filter for low stock if needed
+      let filteredData = data;
+      if (input?.lowStockOnly) {
+        filteredData = data.filter(
+          (item) => item.current_stock <= item.min_stock
+        );
+      }
+
+      return filteredData;
     }),
 
   adjustStock: protectedProcedure
